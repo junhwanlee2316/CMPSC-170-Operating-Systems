@@ -1,0 +1,81 @@
+----------------------------------------------------------------------------------
+File:           P1B_Report.txt
+Description:    This file is the report part of CS170 Project 1B
+Group Members:  Junhwan Lee, Taeho Kim, Aaron Sin
+----------------------------------------------------------------------------------
+
+-----------------------
+Workload Division
+-----------------------
+Two members met up at the library while the other member was available and communicated online. The code didn't work initially, so we also had to debug together and communicate online to fix issues. Therefore, we believe each member did a fair share of workload.
+
+-----------------------
+Design Explanation 
+-----------------------
+
+-----------------------
+Task 1
+-----------------------
+
+In this task, we use the semaphore synchronization primitives in NACHOS to achieve proper synchronization in accessing a hashtable. 
+
+Here, we are using the predefined synchronization routines in "synch.cc"" and modified code in "hashchain.cc."
+For both START_READ() and START_WRITE(),  we can use P() to wait until the sempahore value is greater than 0 to access the resource. 
+For both END_READ() and END_WRITE(), we can use V() to increment the semaphore value to signal that the resource is available for access. 
+
+Finally, we also created a table of sempahore objects for each resource on the hashtable. 
+
+-----------------------
+Task 2
+-----------------------
+
+In this task, we are implementing the Lock operation for syncronization. We implemented the constructor, destructor and member functions in the class Lock in "synch.cc."
+
+Here are the short summaries of what each constructor, destructor, or member function does in the class Lock:
+1. The constructor initializes the four private variables of the class: name, value, queue, and owner. 
+
+2. The destructor simply deallocate memory for the queue by deleting it. 
+
+3. Acquire() is used when a thread is trying to acquire a lock to access the resource. It first checks if the lock is held (value = 1). If so, it appends the thread to the queue and put the thread to sleep. When the lock is released, it set the owner of the lock to the thread and update its owner. Note that interrupt is disabled throughout this entire function to ensure atomicity.
+
+4. Release() is used when a thread is done accessing the resource and is thus releasing the lock. It set the value of the lock to 0 to release the lock and update the owner to be NULL. Then we check if the queue is empty. If it is not empty, we remove the next thread from it and schedule the thread to be ran by waking it up. Note that interrupt is disabled throughout this entire function to ensure atomicity.
+
+5. isHeldByCurrentThread() simply check if the current thread is the owner of the lock. 
+
+Additionally, we created a new table of Lock objects for each resource on the hashtable. We also defined START_READ(), END_READ(), START_WRITE(), END_WRITE() to use the member functions Acquire() and Release() in the Lock class for P1_LOCK. 
+
+-----------------------
+Task 3
+-----------------------
+
+In this task, we are implementing RWLock with Condition. In this scheme, multiple threads can acquire the lock simultanesouly for reading purposes, but only one thread can acquire the lock for writing at one time. 
+
+First, we are implementing the Condition class. We implemented the constructor, destructor, and member functions in the class Condition in "synch.cc"
+
+Here are the short summaries of what each constructor, destructor, or memeber function does in the class Condition:
+1. The constructor initialize the two private variables of the class: name and queue. 
+
+2. The destructor simply deallocate memory for the queue by deleting it.
+
+3. Wait() is used when a thread needs to wait for a specific condition to become true before it can proceed. It first adds the current thread to the queue and releases the lock. It then puts the current thread to sleep to wait for the conditionLock to be free. Then it re-acquire the lock. Note that interrupt is disabled throughout this entire function to ensure atomicity.
+
+4. Signal() is used to wake up one sleeping thread waiting on the condition. It first checks if the queue is empty. If it is not, it removes the next thread from the queue and schedule it to run by waking it up. Note that interrupt is disabled throughout this entire function to ensure atomicity.
+
+5. Broadcast() is used to wake up all sleeping thread waiting on the condition. It first checks if the queue is empty, If it is not, it removes all threads waiting on the condition and schedule them to run by waking them up. Note that interrupt is disabled throughout this entire function to ensure atomicity.
+
+Now we can have RWLock utilize the Condition class. We implement the constructor, destructor, and member functions in the clas RWLock in "rwlock.cc," and modified "rwlock.h" accordingly.
+
+Here are the short summaries of what each constructor, destructor, or member function does in the class RWLock:
+1. The constructor initialize the 7 private class variables. This include the four integer variables intialized as 0, AR, WR, AW, and WW. It also includes the lock object "lock," condition object "okToRead," and condition object "okToWrite."
+
+2. The destructor deallocates memory for lock, okToRead, and okToWrite by deleting them. 
+
+3. startRead() first acquires the lock. It then waits for the AW (Active Writers) to be done or WW (Waiting Writers) to be 0, so that reading and writing canot be done at the same time. It then increment the number of AR (Active Readers). Finally, it releases the lock. 
+
+4. doneRead() first acquires the lock. It then decrements the number of AR (Active Readers). It then checks if the number of AR is 0 and WW is greater than 1. If so, signal waiting writers. Finally it releases the lock.
+
+5. startWrite() first acquires the lock. It then increments the number of WW. It waits for active readers or active writers to finish. Next, it decrements the number of waiting writers and increment the number of active writers. Finally, it releases the lock. 
+
+6. doneWrite() first acquires the lock. It then decrement the number of active writers. It checks there are any waiting writers. If there are, it signals and wake up the next waiting writer. If not, it continues to check if there are any waiting readers. If there are, it broadcasts and wake up all waiting readers. Finally, it releases the lock. 
+
+Additionally, we created a new table of Condition objects for each resource on the hashtable. We also defined START_READ(), END_READ(), START_WRITE(), END_WRITE() to use the functions in "rwlock.cc", startRead(), doneRead(), startWrite(), and doneWrite() for P1_RWLOCK. 

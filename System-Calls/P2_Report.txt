@@ -1,0 +1,115 @@
+1)  Group Members: Aaron Sin, Taeho Kim, Junhwan Lee
+
+    All of the members completed the coding part and report part altogether in person. Since we met up in person and worked together, we believe each person did a fair share of workload. 
+
+
+2z) ProcessManager->broadcast(int) 
+
+    We first implemented broadcast(int) in processmanager.cc as this is used by other functions. 
+
+    For this function, we simply acquired the lock and proceeded to broadcast the condition. Finally, we release the lock.
+
+2x) AddrSpace::AddrSpace(OpenFile, PCB*)
+
+    We also implemented AddrSpace() in addrspace.cc as this is used by other functions.
+
+    We mainly just followed the hints provided and successfully implemented the function.
+
+    We first set up the page table for the new process through a for loop. For each page in the given address space, we allocate physical pages under the new pcb. 
+
+    Then we copy page content of the other process to the new address space page by page through a for loop. We achieved this by first getting the physical address of the other process and the destination physical address in our page table. Then we used bzero and bcopy to complete the copy.
+    
+2a) Fork()
+
+    The Fork() implementation is done in exception.cc. Following the hints, we were able to finish the implementation of Fork(). 
+
+    We first saved the current pid to "currPID" and generated a new pid as "newPID". 
+    
+    Using the "newPID" as the child PID and "currPID" for the parent PID, we created a new PCB.
+
+    We then added the child process to the process manager.
+
+    We made a copy of the address space using AddrSpace.
+
+    Finally, we saved the states of the child process.
+
+    
+2b) Yield()
+
+    The Yield() implementation is done in exception.cc. Following the hints, we were able to finish the implementation of Yield().
+
+    We first saved the current thread register's status.
+
+    We then proceeded to yield using currentThread->Yield().
+
+    Finally, we restored the process's states and page table. 
+
+2c) Exit(int)
+
+    The Exit(int) implementation is done in exception.cc. Following the hints, we were able to finish the implementation of Exit(int).
+
+    We first set the exit status in the PCB for the process using currentThread->space->getPCB() to P_GOOD.
+
+    We then let other processes know that this process exits through processManager()->broadcast(*pid*)
+
+2d) Join()
+
+    The Join() implementation is done in exception.cc AND in processmanager.cc. Following the hints, we were able to finish the implementation of Join().
+
+    In processmanager.cc:
+
+        We simply increment the process waiting on pid. Then we wait for the condition from other process. Finally we decrement the process waiting on pid. 
+
+    In exception.cc:
+
+        We first check if the other process had exited. If so, we return its status. This is done by processManager->getStatus(pid).
+
+        If the other process is still in progress, we then wait for the completion of the other pid using processManager->join(otherPID).
+
+        Then we change the status of the current process in its PCB as P_RUNNING.
+
+2e) Open()
+
+    The Open() implementation is done in exception.cc. Following the hints, we were able to finish the implementation of Open().
+
+    We first set the currUserFile.indexInSysOpenFileList to point to index from openFileManager.
+
+    We also set the offset position of the file opened to 0. 
+
+
+2f) Write()
+
+    The Write() implementation is done in exception.cc. Following the hints, we were able to finish the implementation of Write().
+
+    We first used openFileManager->getFile() to find the opened file structure and stored that in "sysFile"
+
+    We then used sysFile->file->WriteAt() to write out the buffer with corresponding size.
+
+    Finally, we incremented the offset of the file. 
+
+2g) Read()
+
+    The Read() implementation is done in exception.cc. Following the hints, we were able to finish the implementation of Read().    
+
+    We first use openFileManager->getFile() to get the data structure for the file.
+
+    We then check if the file is empty. If so, we exit.
+
+    Otherwise, we read the file using sysFile->file->ReadAt() to read at the selected offset to the system buffer.
+
+    Then we incremented the offset of the file.
+
+    At the end, we also use userReadWrite() to copy the read data from the system buffer to the targeted main memory space.
+
+2h) Close()
+
+    The Close() implementation is done in exception.cc. Following the hints, we were able to finish the implementation of Close().
+
+    We first use openFileManager->getFile() to get the pointer to the file data structure. We stored the pointer as "sysFile."
+
+    Then, we used sysFile->closedBySingleProcess() to close the file pointed by sysFile.
+
+    Finally, we used getPCB()->removeFile(filePID) to remove the file from the open file list in the corresponding pcb.
+
+
+The above implementations are sufficient for the remaining system calls to be called successfully. 

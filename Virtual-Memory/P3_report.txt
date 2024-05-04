@@ -1,0 +1,28 @@
+1)  Group Members: Aaron Sin, Taeho Kim, Junhwan Lee
+
+    All of the members completed the coding part and report part altogether in person. Since we met up in person and worked together, we believe each person did a fair share of workload. 
+
+2) Implementation
+
+    For this project, we modified the function "VirtualMemoryManager::swapPageIn()" so that the second-chance page replacement policy is implemented, and we made sure a dirty page is copied back to the SWAP area.
+
+    Finding a victim page:
+        We implemented a while loop to find a page that is not occupied and not recently used. 
+        Inside the while loop, if the current selected page has been recently used, we set the "use" bit to false, and move on to the next page.
+        We loop until we find a page that is not occupied nor recently used.
+
+    Page replacement:
+        We first check if the chosen victim page is occupied. 
+
+        If it is not occupied, we simply prepare the victim page by initializing its space and pageTableIndex. Then we load the the requested page to the chosen victim page.
+
+        If it is occupied, we would evict the chosen victim page:
+            We first check if the victim page is "dirty," meaning its content has been modified since the last time it was written to disk or swap space. 
+
+            If it is "dirty," we write its content to swap to preserve the content. 
+
+            Then, we can now proceed to prepare the victim page by initializing its space and pageTableIndex, and load the the requested page to the chosen victim page.
+
+        Finally, we update the variable "nextVictim," so that a the system checks the next victim page when needed. 
+
+

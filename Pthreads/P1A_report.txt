@@ -1,0 +1,57 @@
+-------------------------------------------------------------------------
+File:           P1A_report.txt. 
+Description:    This file is the report part of CS170 Project 1A.
+-------------------------------------------------------------------------
+
+## Group Members:  
+Junhwan Lee, Taeho Kim, Aaron Sin
+
+## Workload Division: 
+Everyone met up in person at the library and finished the coding part and this report part together, so everyone did a fair share of workload.
+
+## Design Ideas:
+This code implements a solution for the readers-writers problem, which is dealing with sharing resource between multiple threads. Some threads need to read the resources while other threads might need to write to the resource. To make sure that the resource is consistence, this code is implemented. 
+
+The general idea is that multiple readers/threads should be able to read at the same time but only one writer/thread can write at a time. When a thread is writing or reading, a writer should not be able to write. 
+
+To check if a resource is being read or written, a lock is used. A lock keeps check of the thread that are accessing the resource. Thus, when a thread needs access to the resource, it must first acquire a lock on the mutex. Once a thread had finished reading or writing the shared resource, it releases the lock.
+
+To start a reading process, we simply check if the resource is being written. If so, we must wait until the lock has been released. To start a writing process, we must check if the resource is being read or written, and wait until all locks have been released.
+
+## Summary of Code Flow for each Function Modified:
+
+### Code flow for startRead()
+
+This function indicates the starting process of a thread to gain access to read a resource, which is a mutex in this case.
+
+For this function, we first create an unique_lock object that manages a resource of type mutex. The unique_lock object is named 'lock' and the resouce is named 'mtx'
+
+We then have a while loop that checks if the writing flag is set. If it is set, it then waits for unique_lock object that manages the mutex to be released. 
+
+When it is released, the code exits the while loop, meaning the writing process had been finished. The reading can now begin. Then, we add the number of readers currently reading the resource.
+
+### Code flow for doneRead()
+
+This function indicates the process after a thread is done reading a resource.
+
+For this function, we first create an unique_lock object that manages a resource of type mutex. The unique_lock object is named 'lock' and the resouce is named 'mtx'
+
+We then subtract the number of readers by one to indicate a specific thread had finished reading the resource. 
+
+If there are no readers currently reading the resource, we call notify_one() to wake up one thread that are waiting for this condition to be met to access the resource, specfically threads that are trying to write to the resource in this case. This is because a writer can only access the resource if there are no readers reading the resource. 
+
+### Codeflow for startWrite()
+
+This function indicates the starting process of a thread to gain access to write a resource, which is a mutex in this case.
+
+For the while loop, we check if there are any writers or readers that are accessing the thread. If there are, we wait for those threads to be done with the resource by checking if the unique_lock object that manages the mutex had been released. 
+
+After the lock had been released, we set the writing flag to true to indicate the writing process had begun.
+
+### Codeflow for doneWrite()
+
+This function indicates the process after a thread is done writing a resource.
+
+We set the writing flag to false to indicate the writing process had finished.
+
+Then, we call notify_all() to wake up all threads that are waiting for the writing process to be done to gain access to the resource. In this case, we use notify_all() instead of notify_one() because after a writing process is done, both writers and readers will be trying to gain access to the resource. This is because both readers and writers cannot gain access to a resource that is being written. 
